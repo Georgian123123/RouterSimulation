@@ -1,0 +1,43 @@
+#georgiancomana1119@gmail.com
+
+Tema Protocoale de comunicatie 1 : Router
+
+------------------------------------------------------------------------------------
+Explicarea implementarii temei
+------------------------------------------------------------------------------------
+In primul rand noi putem primii 2 tipuri de pachete si anume : pachete de tip IP sau
+pachete de tip ARP, urmand ca pentru fiecare tip de pachet primit sa avem anumite
+functionalitati.
+    1.Pentru pachete de tip IP.
+        -Trebuiesc verificate daca mesajele sunt alterate, daca mesajul care a ajuns
+        la router(implicit) sunt corecte sau au ajuns incorecte(alterate). Acest
+        lucru fiind realizat cu funtia checksum si campul checksum din campul head-
+        ului IPHDR.
+        - Daca a trecut de acest test, verificam daca pachetul a stat prea mult timp
+        "pe fir". In cazul in care pachetul a stat prea mult timp, va trebui sa in-
+        toarcem un raspuns catre cel de ne-a trimis pachetul. Mesajul va fi de tip
+        ICMP_TIMXCEED. Procesul este simplu, schimband sursa si destinatia din
+        headerul IPHDR si schimband macurile din headerul ether_header.
+        -Daca a trecut si de acest test, verificam daca routerul este cumva destina-
+        tia, urmand sa vericiam daca pachetul este de tip ICMP ECHO. In acest caz, 
+        asemenea explicatiilor de mai sus trebuie sa redirectam mesajul inapoi cu
+        tipul "ICMP ECHO REPLY".
+        -Daca a trecut si de acest test trebuie sa ne ocupam de procesul de fowarding.
+        Acest lucru presupune gasirea acelui path in tabela de rutare pentru desti-
+        natia din pachetul trimis, iar mai apoi gasirea macului cel mai specific din
+        tabela arp. In cazul in care acesta nu exista, se va face un arp request
+        cu trimiterea pachetului de forma BROADCAST(0xFF). Pachetul va fi salvat
+        inainte, intr-o coada, urmand mai apoi sa fie trimis cand se updateaza tabela
+        ARP.
+        -In cazul in care am gasit si in tabela ARP atunci vom scadea timpul de stat
+        pe "fir", recalculam checksumul si vom trimite pachetul mai departe.
+    2.Pentru pachete de tip ARP.
+        -Pentru pachetele de tip ARP avem 2 tipuri de mesaj. ARP request sau ARP reply.
+        -Pentru pachete de tip ARP REQUEST, in mod evident vom raspunde cu un ARP reply
+        care presupune, ca mai sus, schimbarea destiantiei cu sursa, dar de data aceasta
+        din headerul ARP si trimiterea macului nostru(al routerului) inapoi catre cel
+        de a facut requestul.
+        -Pentru pachete de tip ARP REPLY, inseamna ca va trebui preluat din pachet
+        macul primit si updatat in tabela ARP.In cazul in care mai exista pachete ce
+        vor trebui trimise (se afla in coada), le vom trimite mai departe pe interfata
+        mesajului.
